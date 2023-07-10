@@ -138,7 +138,7 @@ The parsing step turns list of lines into a component for searching. The compone
 ### Nested Components
 Nested children are parsed from the body lines (lines between outer comments) like so:
 
-1. Determine the indentation by finding the first indented line
+1. Determine the indentation by finding the first indented line. Only indentation by spaces or tabs are accepted.
 2. Unindent the body lines. Remove the lines that are not indented.
 3. Parse the result like a regular component
 
@@ -169,8 +169,12 @@ The tool searches for a component by specifying a file and one of more search ar
 
 Each search argument is used for searching the next nested component. If a nested component cannot be uniquely identified with the search term, the tool will error.
 
+Since the tool uses comments to find the components, a component won't be found if it's not documented.
+
 ## Output Format
-The tool supports 3 output formats: `summary`, `comment` and `detail`.
+The tool supports 3 output formats for the component: `summary`, `comment` and `detail`.
+
+Addtionally, you can use the `-k/-K` flags to print the parent(s) and the parent comments.
 
 ### Summary (default)
 In summary mode, the outer and inner comments will be printed as-is.
