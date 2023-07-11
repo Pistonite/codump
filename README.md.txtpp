@@ -25,76 +25,7 @@ cargo add codump --features cli
 ```
 ## CLI Usage
 ```
-A straightforward and flexible code/comment dump tool
-
-Usage: codump [OPTIONS] <FILE> <SEARCH_PATH>...
-
-Arguments:
-  <FILE>
-          The input file to parse
-
-  <SEARCH_PATH>...
-          The component search path
-          
-          Each path is a case-sensitive substring used to search for components at that level. The first line of the code after the doc comments is searched for the substring.
-
-Options:
-      --outer <OUTER>
-          Outer single line comment regex
-
-      --outer-start <OUTER_START>
-          Outer multi line comment start regex
-
-      --outer-end <OUTER_END>
-          Outer multi line comment end regex
-
-      --inner <INNER>
-          Inner single line comment regex
-
-      --inner-start <INNER_START>
-          Inner multi line comment start regex
-
-      --inner-end <INNER_END>
-          Inner multi line comment end regex
-
-  -i, --ignore <IGNORE>
-          Pattern for lines that should be ignored
-
-  -f, --format <FORMAT>
-          Format for the output
-          
-          [default: summary]
-
-          Possible values:
-          - summary: Comments + abbreviated code
-          - comment: Comment only format
-          - detail:  Comment + all code
-
-  -p, --preset <PRESET>
-          Use a preset configuration
-          
-          If both presets and individual options are set, the individual options will override the corresponding part of the preset. The rest of the preset will still be used.
-
-          Possible values:
-          - rust:      Rust style
-          - rust-java: Rust style for single line and Java/JS/TS style for multiline
-          - python:    Python style
-
-  -c, --context
-          Print context
-          
-          Context is the parent components of the found component
-
-  -C, --context-comments
-          Print context comments
-          
-          Print the comments of the parent components. Only applies if `--context` is also set.
-
-  -h, --help
-          Print help (see a summary with '-h')
-
-  -V, --version
-          Print version
+-TXTPP#run cargo run --features cli -- --help
 ```
 
 ## Concept

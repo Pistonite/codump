@@ -16,6 +16,10 @@ exclude = [
 clap = { version = "4.3.11", features = ["cargo", "derive"], optional = true }
 regex = "1.9.1"
 
+[dev-dependencies]
+codump = { path = ".", features = ["cli"] }
+toml = "0.7.6"
+
 [features]
 cli = ["clap"]
 

@@ -17,7 +17,7 @@ pub struct Context {
     /// Indentation of the component
     pub indent: usize,
     /// End body lines
-    pub end_body_lines: String,
+    pub end_body_line: String,
 }
 
 /// Implementation of Context
@@ -32,7 +32,7 @@ impl Context {
                 begin_body_line,
                 inner_comments: component.inner_comments.clone(),
                 indent: component.indent,
-                end_body_lines: end_body_line,
+                end_body_line,
             }
         } else {
             Self {
@@ -40,7 +40,7 @@ impl Context {
                 begin_body_line,
                 inner_comments: vec![],
                 indent: component.indent,
-                end_body_lines: end_body_line,
+                end_body_line,
             }
         }
     }

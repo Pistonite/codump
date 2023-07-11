@@ -1,9 +1,7 @@
 //! Logic for finding a component in the parsed component tree
 
+use crate::process::{Component, Context};
 use crate::Config;
-use crate::process::{
-    Component, Context,
-};
 
 /// Result for calling find_component
 #[derive(Debug, Clone)]
@@ -35,19 +33,12 @@ pub fn find_component(
         return FindComponentResult::Found(component.clone(), vec![]);
     }
 
-    let matched_children = component
-        .children
-        .iter()
-        .filter(|child| match child.body_lines.first() {
-            Some(line) => line.contains(&search_path[0]),
-            None => false,
-        })
-        .collect::<Vec<_>>();
+    let matched_children = find_children(component, &search_path[0]);
 
     match matched_children.len() {
         0 => FindComponentResult::NotFound(search_path[0].clone()),
         1 => {
-            let result = find_component(matched_children[0], &search_path[1..], config);
+            let result = find_component(&matched_children[0], &search_path[1..], config);
             match result {
                 FindComponentResult::Found(comp, mut ctx) => {
                     ctx.push(Context::from_component(
@@ -59,13 +50,38 @@ pub fn find_component(
                 _ => result,
             }
         }
-        _ => {
-            let matched_children = matched_children
-                .into_iter()
-                .map(|c| c.clone())
-                .collect::<Vec<_>>();
+        _ => FindComponentResult::Multiple(matched_children, search_path[0].clone()),
+    }
+}
 
-            FindComponentResult::Multiple(matched_children, search_path[0].clone())
+/// Find children components from a component based on a search string
+///
+/// The substring is first matched against the first line of each child.
+/// If no child is matched, it moves on to the second line, and so on.
+///
+/// Returns a vector of all matched children.
+pub fn find_children(component: &Component, search: &str) -> Vec<Component> {
+    let max_lines = component
+        .children
+        .iter()
+        .map(|child| child.body_lines.len())
+        .max()
+        .unwrap_or(0);
+
+    let mut matched_children = vec![];
+    for i in 0..max_lines {
+        for child in &component.children {
+            if let Some(line) = child.body_lines.get(i) {
+                if line.contains(search) {
+                    matched_children.push(child.clone());
+                }
+            }
+        }
+
+        if !matched_children.is_empty() {
+            return matched_children;
         }
     }
+
+    matched_children
 }

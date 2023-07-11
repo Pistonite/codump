@@ -54,10 +54,7 @@ pub fn find_comments(body_lines: &[String], patterns: &CommentPattern) -> Option
         }
     }
 
-    match start {
-        Some(start) => Some((start, body_lines.len())),
-        None => None,
-    }
+    start.map(|start| (start, body_lines.len()))
 }
 
 #[cfg(test)]
@@ -289,7 +286,7 @@ mod ut {
         assert_eq!(start, 3);
         assert_eq!(end, 5);
     }
-    
+
     #[test]
     fn test_single_only() {
         let lines = vec![
@@ -307,5 +304,4 @@ mod ut {
         assert_eq!(start, 5);
         assert_eq!(end, 6);
     }
-
 }

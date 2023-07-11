@@ -1,0 +1,8 @@
+cmd = [ "src/main.rs", "main(", "--preset", "rust" ]
+out = '''
+/// Cli entrypoint
+fn main() {
+    ...
+}
+
+'''
