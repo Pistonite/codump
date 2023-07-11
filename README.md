@@ -4,6 +4,7 @@
 ![Docs Badge](https://img.shields.io/docsrs/codump)
 ![License Badge](https://img.shields.io/github/license/Pistonite/codump)
 ![Issue Badge](https://img.shields.io/github/issues/Pistonite/codump)
+
 A straightforward tool for dumping code/comments from source files.
 
 The tool uses regex for parsing comments and does not parse the language at all.
