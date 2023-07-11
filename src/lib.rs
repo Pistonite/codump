@@ -2,50 +2,57 @@
 //!
 //! A straightforward tool for dumping code/comments from source files.
 
-use std::io;
 use std::fs;
+use std::io;
 
-#[cfg(feature = "cli")]
-use clap::ValueEnum;
-use process::FindComponentResult;
-use process::find_component;
-use process::parse_component;
-use process::{CommentPattern, Component};
-use regex::Regex;
+use process::{find_component, parse_component, Component, FindComponentResult};
 
-pub mod process;
+mod config;
 pub mod presets;
+pub mod process;
+pub use config::*;
+mod format;
+pub use format::*;
 
-/// Configuration
-#[derive(Debug, Clone)]
-pub struct Config {
-    /// Pattern for matching outer comments
-    pub outer_comments: CommentPattern,
-    /// Pattern for matching inner comments
-    pub inner_comments: CommentPattern,
-    /// Pattern of lines to ignore
-    pub ignore_lines: Vec<Regex>,
-    /// If context should include comments
-    pub context_include_comments: bool,
-}
+/// Run the tool
+///
+/// On success, returns the output of the tool as a vector of lines.
+/// On failure, returns an error message.
+pub fn execute(file: &str, search_path: &[String], config: &Config) -> Result<Vec<String>, String> {
+    let result = match search_file(file, search_path, config) {
+        Ok(result) => result,
+        Err(e) => return Err(format!("io error while processing file {}: {}", file, e)),
+    };
 
-/// Output format
-#[derive(Debug, Clone, Default)]
-#[cfg_attr(feature = "cli", derive(ValueEnum))]
-pub enum Format {
-    /// Comments + abbreviated code
-    #[default]
-    Summary,
-
-    /// Comment only format
-    Comment,
-
-    /// Comment + all code
-    Detail,
+    match result {
+        FindComponentResult::NotFound(term) => {
+            Err(format!("No component found matching \"{term}\""))
+        }
+        FindComponentResult::Multiple(matched_children, term) => {
+            for matched in matched_children {
+                for line in config.format.format(&matched) {
+                    eprintln!("{}", line);
+                }
+            }
+            Err(format!("Multiple components found matching \"{term}\". The matched components are shown above."))
+        }
+        FindComponentResult::Found(component, context) => {
+            let output = if config.include_context {
+                config.format.format_with_context(&component, &context)
+            } else {
+                config.format.format(&component)
+            };
+            Ok(output)
+        }
+    }
 }
 
 /// Search for a component in a file
-pub fn search_file(file_path: &str, search_path: &[String], config: &Config) -> io::Result<FindComponentResult> {
+pub fn search_file(
+    file_path: &str,
+    search_path: &[String],
+    config: &Config,
+) -> io::Result<FindComponentResult> {
     let component = parse_file(file_path, config)?;
 
     Ok(find_component(&component, search_path, config))
@@ -53,13 +60,10 @@ pub fn search_file(file_path: &str, search_path: &[String], config: &Config) -> 
 
 /// Parse a file into a component
 pub fn parse_file(path: &str, config: &Config) -> io::Result<Component> {
-    let file_lines = fs::read_to_string(path)?.lines().map(|s| s.to_string()).collect();
+    let file_lines = fs::read_to_string(path)?
+        .lines()
+        .map(|s| s.to_string())
+        .collect();
 
-    Ok(parse_component(
-        vec![],
-        file_lines, 
-        0,
-        config,
-    ))
+    Ok(parse_component(vec![], file_lines, 0, config))
 }
-

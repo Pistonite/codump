@@ -1,11 +1,7 @@
 //! Logic and data structures for parsing/finding a component from lines
 
+use crate::process::{find_comments, find_indentation, unindent_lines};
 use crate::Config;
-use crate::process::{
-    find_comments, 
-    find_indentation, 
-    unindent_lines, 
-};
 
 /// Data of a component
 #[derive(Debug, Clone)]
@@ -14,12 +10,14 @@ pub struct Component {
     pub outer_comments: Vec<String>,
     /// Body lines (unparsed)
     ///
-    /// May include inner comment lines
+    /// Includes inner comment lines
     pub body_lines: Vec<String>,
     /// Inner comments
     ///
-    /// These will keep their indentation
+    /// These are unindented
     pub inner_comments: Vec<String>,
+    /// Range of lines for inner comments in the body lines
+    pub inner_comments_range: Option<(usize, usize)>,
     /// Child components
     pub children: Vec<Component>,
     /// Indentation from parent
@@ -47,16 +45,17 @@ pub fn parse_component(
                 .any(|pattern| pattern.is_match(line))
         })
         .collect::<Vec<_>>();
-    // current first line
+
     let mut comment_end = 0;
+
     // find inner comments
-    let inner_comments =
-        if let Some((start, end)) = find_comments(&unindented_body_lines, &config.inner_comments) {
-            comment_end = end;
-            unindented_body_lines[start..end].to_vec()
-        } else {
-            vec![]
-        };
+    let inner_comments_range = find_comments(&unindented_body_lines, &config.inner_comments);
+    let inner_comments = if let Some((start, end)) = inner_comments_range {
+        comment_end = end;
+        unindented_body_lines[start..end].to_vec()
+    } else {
+        vec![]
+    };
 
     // skip to the first child
     let (mut comment_start, mut comment_end) = if let Some((start, end)) = find_comments(
@@ -70,6 +69,7 @@ pub fn parse_component(
             outer_comments,
             body_lines,
             inner_comments,
+            inner_comments_range,
             children: vec![],
             indent,
         };
@@ -88,7 +88,7 @@ pub fn parse_component(
             let child_body_lines = unindented_body_lines[comment_end..comment_end + start].to_vec();
             // update indices
             comment_start = comment_end + start;
-            comment_end = comment_end + end;
+            comment_end += end;
             child_body_lines
         } else {
             let child_body_lines = unindented_body_lines[comment_end..].to_vec();
@@ -108,8 +108,8 @@ pub fn parse_component(
         outer_comments,
         body_lines,
         inner_comments,
+        inner_comments_range,
         children,
         indent,
     }
 }
-

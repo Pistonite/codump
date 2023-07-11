@@ -4,9 +4,14 @@ set windows-shell := ["powershell.exe", "-NoLogo", "-Command"]
 install:
     rustup update
     cargo install cargo-watch
+    cargo install txtpp
+
+# Generate readme
+readme:
+    txtpp README.md
 
 # Pre-commit checks
-pre-commit: && readme clean
+pre-commit: && readme 
     cargo clippy --all-targets --all-features -- -D warnings
     cargo fmt
     cargo doc
