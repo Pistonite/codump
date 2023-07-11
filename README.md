@@ -1,4 +1,9 @@
 # codump
+![Build Badge](https://img.shields.io/github/actions/workflow/status/Pistonite/codump/rust.yml)
+![Version Badge](https://img.shields.io/crates/v/codump)
+![Docs Badge](https://img.shields.io/docsrs/codump)
+![License Badge](https://img.shields.io/github/license/Pistonite/codump)
+![Issue Badge](https://img.shields.io/github/issues/Pistonite/codump)
 A straightforward tool for dumping code/comments from source files.
 
 The tool uses regex for parsing comments and does not parse the language at all.
@@ -6,10 +11,19 @@ Therefore there's no requirement on directives or pragmas and it works on all so
 given your codebase has a system for doc comments.
 
 ## Install
+As executable:
 ```
 cargo install codump
 ```
-Usage:
+As library:
+```
+cargo add codump
+```
+Add the `cli` feature if you need to parse config from CLI args
+```
+cargo add codump --features cli
+```
+## CLI Usage
 ```
 A straightforward and flexible code/comment dump tool
 
