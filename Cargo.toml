@@ -9,6 +9,8 @@ authors = ["Pistonight <terrabyte100k@gmail.com>"]
 keywords = ["tool"]
 exclude = [
     ".github/**/*",
+    "README.md.txtpp",
+    "tests/**/*",
     "Justfile"
 ]
 
