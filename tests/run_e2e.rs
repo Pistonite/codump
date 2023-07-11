@@ -18,7 +18,11 @@ macro_rules! testit {
                 .as_array()
                 .expect("TOML test definition is missing the cmd")
                 .iter()
-                .map(|v| v.as_str().expect("TOML test cmd must be an arrow of string").to_string())
+                .map(|v| {
+                    v.as_str()
+                        .expect("TOML test cmd must be an arrow of string")
+                        .to_string()
+                })
                 .collect::<Vec<_>>();
             let expected = test["out"]
                 .as_str()

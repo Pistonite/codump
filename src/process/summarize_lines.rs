@@ -17,16 +17,14 @@ pub fn summarize_lines(
     let mut output = vec![];
     let mut is_in_indent = false;
     for (i, line) in lines.iter().enumerate() {
-        if line.is_empty() {
-            if is_in_indent {
-                continue;
-            }
+        if line.is_empty() && is_in_indent {
+            continue;
         }
         let should_ellipsize = line.starts_with(super::is_indent_char)
-                && match exclude {
-                    Some((start, end)) => i < start || i >= end,
-                    None => true,
-                };
+            && match exclude {
+                Some((start, end)) => i < start || i >= end,
+                None => true,
+            };
         if should_ellipsize {
             if !is_in_indent {
                 output.push(super::indent_string("...", indent));
@@ -277,8 +275,12 @@ mod ut {
             "bcd".to_string(),
             " cde".to_string(),
         ];
-        let expected = vec!["abc".to_string(), "".to_string(), "bcd".to_string(), "  ...".to_string()];
+        let expected = vec![
+            "abc".to_string(),
+            "".to_string(),
+            "bcd".to_string(),
+            "  ...".to_string(),
+        ];
         assert_eq!(summarize_lines(&input, 2, None), expected);
     }
-
 }
