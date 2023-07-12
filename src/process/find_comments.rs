@@ -15,7 +15,10 @@ pub struct CommentPattern {
     pub multi_start: Option<Regex>,
     /// Pattern for the last line of the multi line comments
     ///
-    /// Note that the first can also be the last line if the start and end patterns overlap.
+    /// The last line must not be the start line.
+    /// If the comment syntax supports single-line block comment, then
+    /// the single line regex should support that.
+    ///
     /// Ignored if multi_start is None.
     pub multi_end: Regex,
 }
@@ -23,10 +26,23 @@ pub struct CommentPattern {
 /// Locate the first block of comments from list of lines
 ///
 /// Returns the start (inclusive) and end (exclusive) indices.
-pub fn find_comments(body_lines: &[String], patterns: &CommentPattern) -> Option<(usize, usize)> {
+///
+/// The first `indent` bytes are ignored if the line starts with a space or tab
+/// . This assumes the first `indent` bytes only contains spaces/tabs
+/// (i.e. will panic if cutting off in the middle of unicode character)
+pub fn find_comments(
+    body_lines: &[String],
+    patterns: &CommentPattern,
+    indent: usize,
+) -> Option<(usize, usize)> {
     let mut is_multi = false;
     let mut start: Option<usize> = None;
     for (i, line) in body_lines.iter().enumerate() {
+        let line = if indent >= line.len() {
+            ""
+        } else {
+            &line[indent..]
+        };
         match start {
             Some(start) => {
                 if is_multi {
@@ -43,9 +59,9 @@ pub fn find_comments(body_lines: &[String], patterns: &CommentPattern) -> Option
                     start = Some(i);
                 } else if let Some(pattern) = &patterns.multi_start {
                     if pattern.is_match(line) {
-                        if patterns.multi_end.is_match(line) {
-                            return Some((i, i + 1));
-                        }
+                        // if patterns.multi_end.is_match(line) {
+                        //     return Some((i, i + 1));
+                        // }
                         start = Some(i);
                         is_multi = true;
                     }
@@ -81,7 +97,7 @@ mod ut {
     fn test_1_empty() {
         let lines = vec![];
         let pattern = create_test_pattern();
-        let result = find_comments(&lines, &pattern);
+        let result = find_comments(&lines, &pattern, 0);
         assert!(result.is_none());
     }
 
@@ -93,7 +109,7 @@ mod ut {
             "}".to_string(),
         ];
         let pattern = create_test_pattern();
-        let result = find_comments(&lines, &pattern);
+        let result = find_comments(&lines, &pattern, 0);
         assert!(result.is_none());
     }
 
@@ -106,7 +122,7 @@ mod ut {
             "}".to_string(),
         ];
         let pattern = create_test_pattern();
-        let (start, end) = find_comments(&lines, &pattern).unwrap();
+        let (start, end) = find_comments(&lines, &pattern, 0).unwrap();
         assert_eq!(start, 0);
         assert_eq!(end, 1);
     }
@@ -123,7 +139,7 @@ mod ut {
             "///abcde24".to_string(),
         ];
         let pattern = create_test_pattern();
-        let (start, end) = find_comments(&lines, &pattern).unwrap();
+        let (start, end) = find_comments(&lines, &pattern, 0).unwrap();
         assert_eq!(start, 0);
         assert_eq!(end, 3);
     }
@@ -139,7 +155,7 @@ mod ut {
             "}".to_string(),
         ];
         let pattern = create_test_pattern();
-        let (start, end) = find_comments(&lines, &pattern).unwrap();
+        let (start, end) = find_comments(&lines, &pattern, 0).unwrap();
         assert_eq!(start, 0);
         assert_eq!(end, 1);
     }
@@ -153,9 +169,9 @@ mod ut {
             "}".to_string(),
         ];
         let pattern = create_test_pattern();
-        let (start, end) = find_comments(&lines, &pattern).unwrap();
+        let (start, end) = find_comments(&lines, &pattern, 0).unwrap();
         assert_eq!(start, 0);
-        assert_eq!(end, 1);
+        assert_eq!(end, 4);
     }
 
     #[test]
@@ -170,7 +186,7 @@ mod ut {
             "}".to_string(),
         ];
         let pattern = create_test_pattern();
-        let (start, end) = find_comments(&lines, &pattern).unwrap();
+        let (start, end) = find_comments(&lines, &pattern, 0).unwrap();
         assert_eq!(start, 0);
         assert_eq!(end, 4);
     }
@@ -190,7 +206,7 @@ mod ut {
             "}".to_string(),
         ];
         let pattern = create_test_pattern();
-        let (start, end) = find_comments(&lines, &pattern).unwrap();
+        let (start, end) = find_comments(&lines, &pattern, 0).unwrap();
         assert_eq!(start, 0);
         assert_eq!(end, 2);
     }
@@ -204,7 +220,7 @@ mod ut {
             "///abcde ".to_string(),
         ];
         let pattern = create_test_pattern();
-        let (start, end) = find_comments(&lines, &pattern).unwrap();
+        let (start, end) = find_comments(&lines, &pattern, 0).unwrap();
         assert_eq!(start, 3);
         assert_eq!(end, 4);
     }
@@ -219,7 +235,7 @@ mod ut {
             "///abcde24".to_string(),
         ];
         let pattern = create_test_pattern();
-        let (start, end) = find_comments(&lines, &pattern).unwrap();
+        let (start, end) = find_comments(&lines, &pattern, 0).unwrap();
         assert_eq!(start, 3);
         assert_eq!(end, 5);
     }
@@ -235,7 +251,7 @@ mod ut {
             "///abcde2 ".to_string(),
         ];
         let pattern = create_test_pattern();
-        let (start, end) = find_comments(&lines, &pattern).unwrap();
+        let (start, end) = find_comments(&lines, &pattern, 0).unwrap();
         assert_eq!(start, 3);
         assert_eq!(end, 4);
     }
@@ -246,12 +262,13 @@ mod ut {
             "fn main() {".to_string(),
             "    println!(\"Hello, world!\");".to_string(),
             "}".to_string(),
-            "/**abcde*/ ".to_string(),
+            "/**abcde ".to_string(),
+            "abcde*/ ".to_string(),
         ];
         let pattern = create_test_pattern();
-        let (start, end) = find_comments(&lines, &pattern).unwrap();
+        let (start, end) = find_comments(&lines, &pattern, 0).unwrap();
         assert_eq!(start, 3);
-        assert_eq!(end, 4);
+        assert_eq!(end, 5);
     }
 
     #[test]
@@ -264,7 +281,7 @@ mod ut {
             "abcde*/ ".to_string(),
         ];
         let pattern = create_test_pattern();
-        let (start, end) = find_comments(&lines, &pattern).unwrap();
+        let (start, end) = find_comments(&lines, &pattern, 0).unwrap();
         assert_eq!(start, 3);
         assert_eq!(end, 5);
     }
@@ -282,7 +299,7 @@ mod ut {
             "abcde*/ ".to_string(),
         ];
         let pattern = create_test_pattern();
-        let (start, end) = find_comments(&lines, &pattern).unwrap();
+        let (start, end) = find_comments(&lines, &pattern, 0).unwrap();
         assert_eq!(start, 3);
         assert_eq!(end, 5);
     }
@@ -300,8 +317,48 @@ mod ut {
             "///abcde2 ".to_string(),
         ];
         let pattern = create_test_pattern_single_only();
-        let (start, end) = find_comments(&lines, &pattern).unwrap();
+        let (start, end) = find_comments(&lines, &pattern, 0).unwrap();
         assert_eq!(start, 5);
         assert_eq!(end, 6);
+    }
+
+    #[test]
+    fn test_with_indent() {
+        let lines = vec![
+            "/**abcde ".to_string(),
+            "abcde*/ ".to_string(),
+            "  /**abcde ".to_string(),
+            "  abcde*/ ".to_string(),
+        ];
+        let pattern = create_test_pattern();
+        let (start, end) = find_comments(&lines, &pattern, 2).unwrap();
+        assert_eq!(start, 2);
+        assert_eq!(end, 4);
+    }
+
+    #[test]
+    fn test_with_indent_short_line() {
+        let lines = vec![
+            "a".to_string(),
+            "  /**abcde ".to_string(),
+            "  abcde*/ ".to_string(),
+        ];
+        let pattern = create_test_pattern();
+        let (start, end) = find_comments(&lines, &pattern, 2).unwrap();
+        assert_eq!(start, 1);
+        assert_eq!(end, 3);
+    }
+
+    #[test]
+    fn test_with_indent_short_line_end() {
+        let lines = vec![
+            "  /// something".to_string(),
+            "h".to_string(),
+            "  /// something".to_string(),
+        ];
+        let pattern = create_test_pattern();
+        let (start, end) = find_comments(&lines, &pattern, 2).unwrap();
+        assert_eq!(start, 0);
+        assert_eq!(end, 1);
     }
 }

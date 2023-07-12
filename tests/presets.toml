@@ -1,0 +1,32 @@
+[[test]]
+cmd = [ "src/presets.rs", "Preset", "--preset", "rust", "-C" ]
+out = '''
+//! Comment pattern presets for different languages
+...
+/// Preset implementation
+impl Preset {
+    ...
+}
+...
+'''
+
+[[test]]
+cmd = [ "src/presets.rs", "Preset", "--preset", "rust", "-c" ]
+out = '''
+...
+/// Preset implementation
+impl Preset {
+    ...
+}
+...
+'''
+
+[[test]]
+cmd = [ "src/presets.rs", "enum Preset", "Rust,", "--preset", "rust" ]
+out = '''
+/// Rust style
+///
+/// Outer comments: `///`
+/// Inner comments: `//!`
+Rust,
+'''

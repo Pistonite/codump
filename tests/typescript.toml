@@ -1,0 +1,102 @@
+[[test]]
+cmd = ["-p", "rust-java", "tests/typescript.ts", "function hello"]
+out = '''
+/// Single line comment
+function hello() {
+    ...
+}
+
+'''
+
+[[test]]
+cmd = ["-p", "rust-java", "tests/typescript.ts", "function hello", "-f", "detail"]
+out = '''
+/// Single line comment
+function hello() {
+    console.log('Hello World');
+}
+
+'''
+
+[[test]]
+cmd = ["-p", "rust-java", "tests/typescript.ts", "class HelloWorld", "main", "-c"]
+out = '''
+...
+public class HelloWorld {
+    ...
+    /**
+     * Main method
+     * @param args Command line arguments
+     * @return void
+     */
+    public static void main(String[] args) {
+        ...
+    }
+    ...
+}
+
+...
+'''
+
+[[test]]
+cmd = ["-p", "rust-java", "tests/typescript.ts", "export class Hello", "constructor", "-c"]
+out = '''
+...
+export class Hello {
+    ...
+    /**
+     * Constructor
+     * @param name Name
+     */
+    constructor(name: string) {
+        ...
+    }
+    ...
+}
+...
+'''
+
+[[test]]
+cmd = ["-p", "rust-java", "tests/typescript.ts", "export class Hello", "constructor", "hello", "-c"]
+out = '''
+...
+export class Hello {
+    ...
+    constructor(name: string) {
+        ...
+        /// You can find anonymous function/classes too if 
+        /// they are documented properly, like this one
+        function hello() {
+            ...
+        }
+        
+        ...
+    }
+    ...
+}
+...
+'''
+
+[[test]]
+cmd = ["-p", "rust-java", "tests/typescript.ts", "export class Hello", "constructor", "hello", "for", "-c"]
+out = '''
+...
+export class Hello {
+    ...
+    constructor(name: string) {
+        ...
+        function hello() {
+            ...
+            /** the nesting can go on forever */
+            for (let i = 0; i < 10; i++) {
+                ...
+            }
+            ...
+        }
+        
+        ...
+    }
+    ...
+}
+...
+'''

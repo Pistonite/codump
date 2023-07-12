@@ -54,6 +54,7 @@ pub fn search_file(
     config: &Config,
 ) -> io::Result<FindComponentResult> {
     let component = parse_file(file_path, config)?;
+    println!("component: {:#?}", component);
 
     Ok(find_component(&component, search_path, config))
 }
@@ -65,5 +66,5 @@ pub fn parse_file(path: &str, config: &Config) -> io::Result<Component> {
         .map(|s| s.to_string())
         .collect();
 
-    Ok(parse_component(vec![], file_lines, 0, config))
+    Ok(parse_component(vec![], file_lines, 0, true, config))
 }

@@ -1,11 +1,13 @@
 //! Logic and data structures for parsing/finding a component from lines
 
-use crate::process::{find_comments, find_indentation, unindent_lines};
+use crate::process::{find_comments, find_indentation, unindent_lines, CommentPattern};
 use crate::Config;
 
 /// Data of a component
 #[derive(Debug, Clone)]
 pub struct Component {
+    /// If the component is the root file
+    pub is_root: bool,
     /// Outer comments
     pub outer_comments: Vec<String>,
     /// Body lines (unparsed)
@@ -34,8 +36,12 @@ pub fn parse_component(
     outer_comments: Vec<String>,
     body_lines: Vec<String>,
     indent: usize,
+    is_root: bool,
     config: &Config,
 ) -> Component {
+    // need to find indent range first since the range will be
+    // different when unindented
+    let inner_comments_range = find_comments(&body_lines, &config.inner_comments, indent);
     let unindented_body_lines = unindent_lines(&body_lines, indent)
         .into_iter()
         .filter(|line| {
@@ -49,8 +55,9 @@ pub fn parse_component(
     let mut comment_end = 0;
 
     // find inner comments
-    let inner_comments_range = find_comments(&unindented_body_lines, &config.inner_comments);
-    let inner_comments = if let Some((start, end)) = inner_comments_range {
+    let inner_comments = if let Some((start, end)) =
+        find_comments(&unindented_body_lines, &config.inner_comments, 0)
+    {
         comment_end = end;
         unindented_body_lines[start..end].to_vec()
     } else {
@@ -58,14 +65,16 @@ pub fn parse_component(
     };
 
     // skip to the first child
-    let (mut comment_start, mut comment_end) = if let Some((start, end)) = find_comments(
-        &unindented_body_lines[comment_end..],
-        &config.outer_comments,
-    ) {
+    let (mut comment_start, mut comment_end) = if let Some((start, end)) =
+        find_next_child_outer_comment(
+            &unindented_body_lines[comment_end..],
+            &config.outer_comments,
+        ) {
         (comment_end + start, comment_end + end)
     } else {
         // no children
         return Component {
+            is_root,
             outer_comments,
             body_lines,
             inner_comments,
@@ -81,7 +90,7 @@ pub fn parse_component(
         // extract child lines
         let child_outer_comments = unindented_body_lines[comment_start..comment_end].to_vec();
         // try finding next comment
-        let child_body_lines = if let Some((start, end)) = find_comments(
+        let child_body_lines = if let Some((start, end)) = find_next_child_outer_comment(
             &unindented_body_lines[comment_end..],
             &config.outer_comments,
         ) {
@@ -100,11 +109,13 @@ pub fn parse_component(
             child_outer_comments,
             child_body_lines,
             child_indent,
+            false,
             config,
         ));
     }
 
     Component {
+        is_root,
         outer_comments,
         body_lines,
         inner_comments,
@@ -112,4 +123,37 @@ pub fn parse_component(
         children,
         indent,
     }
+}
+
+/// Helper for locating the next child's outer comments.
+///
+/// Returns the start and end indices of the next child's outer comments,
+/// or None if there are no more children.
+///
+/// The criteria for a child is that it has outer comments, and the next line
+/// after the outer comment exists, is not empty, and has no indent.
+fn find_next_child_outer_comment(
+    lines: &[String],
+    pattern: &CommentPattern,
+) -> Option<(usize, usize)> {
+    let mut comment_end = 0;
+    while comment_end < lines.len() {
+        // find next outer comment from comment_end
+        if let Some((start, end)) = find_comments(&lines[comment_end..], pattern, 0) {
+            // check if next line is not empty and not indented
+            if let Some(next_line) = lines.get(comment_end + end) {
+                if !next_line.is_empty() && !next_line.starts_with(super::is_indent_char) {
+                    // found next child
+                    return Some((comment_end + start, comment_end + end));
+                }
+            }
+
+            // keep finding next comment
+            comment_end += end;
+        } else {
+            break;
+        }
+    }
+    // outer comment not found
+    None
 }

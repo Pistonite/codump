@@ -18,6 +18,7 @@ pub enum Format {
     Detail,
 }
 
+/// Format implementation
 impl Format {
     /// Format a component without context
     pub fn format(&self, component: &Component) -> Vec<String> {
@@ -29,16 +30,15 @@ impl Format {
         let mut indent: usize = 0;
         let mut output = vec![];
         // add context beginning
-        contexts.iter().for_each(|context| {
+        // skip the first one since that's the file
+        contexts.iter().rev().skip(0).for_each(|context| {
             context.outer_comments.iter().for_each(|line| {
                 output.push(indent_string(line, indent));
             });
-            output.push(indent_string(&context.begin_body_line, indent));
-            indent += context.indent;
-            context.inner_comments.iter().for_each(|line| {
+            context.begin_body_lines.iter().for_each(|line| {
                 output.push(indent_string(line, indent));
             });
-            output.push(indent_string("...", indent));
+            indent += context.indent;
         });
         // add component
         let component_lines = match self {
@@ -52,10 +52,11 @@ impl Format {
         });
 
         // add context ending
-        contexts.iter().for_each(|context| {
-            output.push(indent_string("...", indent));
-            output.push(indent_string(&context.end_body_line, indent));
+        contexts.iter().skip(0).for_each(|context| {
             indent -= context.indent;
+            context.end_body_lines.iter().for_each(|line| {
+                output.push(indent_string(line, indent));
+            });
         });
 
         output

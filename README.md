@@ -11,6 +11,36 @@ The tool uses regex for parsing comments and does not parse the language at all.
 Therefore there's no requirement on directives or pragmas and it works on all source code,
 given your codebase has a system for doc comments.
 
+## Why
+There are many existing tools that take comments in the codebase and turn them
+into documentation. However, the quality of the generated documentation depends
+fully on the quality of the comments. Most of the time you will end up with a generated
+documentation where 90% of the pages are useless because the symbol is either not documented,
+or the comment is empty/doesn't say anything, like:
+```c#
+/// <summary>
+///
+/// <summary>
+/// <param name="input">the input</param>
+public void DoSomething(string input) {
+    ...
+}
+```
+I found it to be more useful to reverse this process, where I *bring the code to the documentation*.
+For example, my documentation can be a wiki page where I document not only the APIs and symbols,
+but also the design principles, examples, etc... And the documentation tool can generate code snippets
+to go along with the wiki page.
+
+So that's the back story. This tool takes a file, a preset or custom comment syntax, and a search path to
+find the symbol, then it prints out the code in a nice format ready to be embedded in a documentation page.
+
+Obviously, just printing the code into the console doesn't make it documentation. I use [txtpp](https://github.com/Pistonite/txtpp)
+for generating files with embedded commands.
+
+## Contribution and Issues
+Contribution and issues are welcome. This is my personal project and I have limited
+bandwidth working on it, but I will take any suggestion/comment seriously.
+
 ## Install
 As executable:
 ```
@@ -89,7 +119,7 @@ Options:
   -C, --context-comments
           Print context comments
           
-          Print the comments of the parent components. Only applies if `--context` is also set.
+          Print the comments of the parents along with the context (implies --context)
 
   -h, --help
           Print help (see a summary with '-h')
