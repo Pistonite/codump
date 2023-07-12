@@ -8,6 +8,8 @@
 ///
 /// If exclude range is set, the lines in that range will be untouched.
 ///
+/// If indent is 0, this returns the vector as is
+///
 /// The exclude range has inclusive start and exclusive end.
 pub fn summarize_lines(
     lines: &[String],

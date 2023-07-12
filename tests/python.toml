@@ -1,0 +1,112 @@
+[[test]]
+cmd = ["-p", "python", "tests/python.py", "def hello("]
+out = '''
+
+def hello():
+    """This is a docstring"""
+    ...
+'''
+
+[[test]]
+cmd = ["-p", "python", "tests/python.py", "def hello2"]
+out = """
+
+def hello2():
+    '''single quotes'''
+    ...
+"""
+
+[[test]]
+cmd = ["-p", "python", "tests/python.py", "def hello(", "-c"]
+out = '''
+...
+
+def hello():
+    """This is a docstring"""
+    ...
+...
+'''
+
+[[test]]
+cmd = ["-p", "python", "tests/python.py", "def hello(", "-C"]
+out = '''
+"""python only has inner comments"""
+...
+
+def hello():
+    """This is a docstring"""
+    ...
+...
+'''
+
+[[test]]
+cmd = ["-p", "python", "tests/python.py", "class Hello", "__init__", "-c"]
+out = '''
+...
+class Hello:
+    ...
+    
+    def __init__(self):
+        """
+            Init doc
+        """
+        ...
+    ...
+...
+'''
+
+[[test]]
+cmd = ["-p", "python", "tests/python.py", "class Hello", "__init__", "-C"]
+out = '''
+"""python only has inner comments"""
+...
+
+class Hello:
+    """Class doc"""
+    ...
+    
+    def __init__(self):
+        """
+            Init doc
+        """
+        ...
+    ...
+...
+'''
+
+[[test]]
+cmd = ["-p", "python", "tests/python.py", "class Hello", "print_world", "hello", "-c"]
+out = """
+...
+class Hello:
+    ...
+    def print_world(self):
+        ...
+        
+        def print_hello(self):
+            '''single quotes'''
+            ...
+        ...
+    ...
+...
+"""
+
+[[test]]
+cmd = ["-p", "python", "tests/python.py", "class Hello", "print_world", "nobody", "-c"]
+out = """
+...
+class Hello:
+    ...
+    def print_world(self):
+        ...
+        
+        def nobody(self):
+            '''single quotes'''
+        ...
+    ...
+...
+"""
+
+[[test]]
+cmd = ["-p", "python", "tests/python.py", "class Hello", "print_world", "hello", "-C"]
+out = "\"\"\"python only has inner comments\"\"\"\n...\n\nclass Hello:\n    \"\"\"Class doc\"\"\"\n    ...\n    \n    def print_world(self):\n        \"\"\"Prints world\"\"\"\n        ...\n        \n        def print_hello(self):\n            '''single quotes'''\n            ...\n        ...\n    ...\n...\n"

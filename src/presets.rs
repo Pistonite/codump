@@ -17,15 +17,16 @@ pub enum Preset {
     /// Rust style for single line and Java/JS/TS style for multiline
     ///
     /// Outer comments: `///` and `/** ... */`
-    /// Inner comments: `//!` and `/** ... */`
+    /// Inner comments: `//!` and `/* ... */`
     RustJava,
     /// Python style
     ///
-    /// Outer comments: `###`
+    /// Outer comments: empty line
     /// Inner comments: `###` and `""" ... """`
     Python,
 }
 
+/// Preset implementation
 impl Preset {
     /// Get the patterns in the preset
     ///
@@ -46,26 +47,26 @@ impl Preset {
             ),
             Preset::RustJava => (
                 CommentPattern {
-                    single_line: Regex::new(r"^///").unwrap(),
+                    single_line: Regex::new(r"^///|^/\*\*.*\*/\s*$").unwrap(),
                     multi_start: Some(Regex::new(r"^/\*\*").unwrap()),
                     multi_end: Regex::new(r"\*/\s*$").unwrap(),
                 },
                 CommentPattern {
-                    single_line: Regex::new(r"^//!").unwrap(),
-                    multi_start: Some(Regex::new(r"^/\*\*").unwrap()),
+                    single_line: Regex::new(r"^//!|^/\*[^\*].*\*/\s*$").unwrap(),
+                    multi_start: Some(Regex::new(r"^/\*[^\*]").unwrap()),
                     multi_end: Regex::new(r"\*/\s*$").unwrap(),
                 },
             ),
             Preset::Python => (
                 CommentPattern {
-                    single_line: Regex::new(r"^###").unwrap(),
-                    multi_start: Some(Regex::new("^\"\"\"").unwrap()),
-                    multi_end: Regex::new("\"\"\"\\s*$").unwrap(),
+                    single_line: Regex::new(r"^$").unwrap(),
+                    multi_start: None,
+                    multi_end: Regex::new(r"").unwrap(),
                 },
                 CommentPattern {
-                    single_line: Regex::new(r"^###").unwrap(),
-                    multi_start: Some(Regex::new("^\"\"\"").unwrap()),
-                    multi_end: Regex::new("\"\"\"\\s*$").unwrap(),
+                    single_line: Regex::new("^[\"']{3}.*?[\"']{3}\\s*$").unwrap(),
+                    multi_start: Some(Regex::new("^[\"']{3}").unwrap()),
+                    multi_end: Regex::new("[\"']{3}\\s*$").unwrap(),
                 },
             ),
         }

@@ -11,12 +11,12 @@ readme:
     txtpp README.md
 
 # Pre-commit checks
-pre-commit: && readme 
+check: && readme 
     cargo clippy --all-targets --all-features -- -D warnings
     cargo fmt
     cargo doc
     cargo test
 
 # Build and open docs
-doc: pre-commit
+doc: check
     cargo doc --open

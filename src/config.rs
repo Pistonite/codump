@@ -83,7 +83,7 @@ pub struct CliArgs {
 
     /// Print context comments
     ///
-    /// Print the comments of the parent components. Only applies if `--context` is also set.
+    /// Print the comments of the parents along with the context (implies --context)
     #[cfg_attr(feature = "cli", arg(long, short = 'C'))]
     context_comments: bool,
 }
@@ -143,7 +143,7 @@ impl TryFrom<CliArgs> for Config {
             outer_comments,
             inner_comments,
             ignore_lines,
-            include_context: args.context,
+            include_context: args.context || args.context_comments,
             context_include_comments: args.context_comments,
             format: args.format,
         })

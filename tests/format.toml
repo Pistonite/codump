@@ -1,0 +1,48 @@
+[[test]]
+cmd = ["-p", "rust", "src/format.rs", "impl Format", "format_with_context"]
+out = '''
+/// Format a component with context
+pub fn format_with_context(&self, component: &Component, contexts: &[Context]) -> Vec<String> {
+    ...
+}
+'''
+
+[[test]]
+cmd = ["-p", "rust", "src/format.rs", "impl Format", "format_with_context", "--format", "comment"]
+out = '''
+/// Format a component with context
+'''
+
+[[test]]
+cmd = ["-p", "rust", "src/format.rs", "impl Format", "format_with_context", "--context"]
+out = '''
+...
+impl Format {
+    ...
+    /// Format a component with context
+    pub fn format_with_context(&self, component: &Component, contexts: &[Context]) -> Vec<String> {
+        ...
+    }
+    ...
+}
+
+...
+'''
+
+[[test]]
+cmd = ["-p", "rust", "src/format.rs", "impl Format", "format_with_context", "--context-comments"]
+out = '''
+//! Logic for printing output in different formats
+...
+/// Format implementation
+impl Format {
+    ...
+    /// Format a component with context
+    pub fn format_with_context(&self, component: &Component, contexts: &[Context]) -> Vec<String> {
+        ...
+    }
+    ...
+}
+
+...
+'''
