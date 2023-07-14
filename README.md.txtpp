@@ -44,7 +44,7 @@ bandwidth working on it, but I will take any suggestion/comment seriously.
 ## Install
 As executable:
 ```
-cargo install codump
+cargo install codump --features cli
 ```
 As library:
 ```
